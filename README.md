@@ -2,7 +2,7 @@
 
 Welcome to the **Stranded Skies** project! This repository contains the Multiplayer Backend (Spring Boot) and the WebGL Game Frontend.
 
- ফলো the interactive checklist below to set up and run the project.
+Follow the interactive checklist below to set up and run the project.
 
 ---
 
