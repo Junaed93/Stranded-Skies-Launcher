@@ -150,9 +150,24 @@
 
       // 2. Intercept fetch
       const originalFetch = window.fetch;
-      window.fetch = async function (url, options) {
-        if (url && url.toString().includes('/api/scores') && options && options.method === 'POST') {
-          handleScoreSubmission(options.body);
+      window.fetch = async function (input, init) {
+        let url = input;
+        let method = (init && init.method) || 'GET';
+        let body = (init && init.body);
+
+        if (input instanceof Request) {
+          url = input.url;
+          method = input.method;
+          body = input.body;
+        }
+
+        if (url && url.toString().includes('/api/scores') && (method.toUpperCase() === 'POST')) {
+          if (typeof body === 'string') {
+            handleScoreSubmission(body);
+          } else {
+            console.log("Intercepted score submission but body is not a string:", body);
+            handleScoreSubmission(body);
+          }
         }
         return originalFetch.apply(this, arguments);
       };
