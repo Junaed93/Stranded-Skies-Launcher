@@ -1,6 +1,6 @@
 const API = "http://localhost:8080";
 
-function saveToken(token, username) {
+function saveToken(token, username, isUpgrade = false) {
   localStorage.setItem("token", token);
   localStorage.setItem("username", username);
   window.location.href = "game.html";
@@ -24,7 +24,7 @@ async function login() {
         throw new Error(errData.error || "Login failed");
       }
       const data = await res.json();
-      if(data.token) saveToken(data.token, usernameInput.value);
+      if(data.token) saveToken(data.token, usernameInput.value, false);
   } catch (e) {
       console.error(e);
       alert(e.message || "Error connecting to server");
@@ -51,6 +51,7 @@ async function register() {
   const currentToken = localStorage.getItem("token");
   const currentUsername = localStorage.getItem("username");
   const isGuest = currentUsername && currentUsername.startsWith("Guest_");
+  let isUpgrade = false;
 
   try {
       let res;
@@ -68,6 +69,7 @@ async function register() {
               password: passwordInput.value
             })
           });
+          isUpgrade = true;
       } else {
           console.log("Creating new account...");
           res = await fetch(API + "/auth/register", {
@@ -93,7 +95,7 @@ async function register() {
       
       if(data.token) {
           alert(isGuest ? "Account Upgraded! Score Saved." : "Registration Successful! Logging in...");
-          saveToken(data.token, usernameInput.value);
+          saveToken(data.token, usernameInput.value, isUpgrade);
       } else {
           alert("Failed: No token received");
       }
@@ -107,7 +109,7 @@ async function guest() {
   try {
       const res = await fetch(API + "/auth/guest", { method: "POST" });
       const data = await res.json();
-      if(data.token) saveToken(data.token, data.username || "Guest");
+      if(data.token) saveToken(data.token, data.username || "Guest", false);
       else alert("Guest login failed");
   } catch (e) {
       console.error(e);
