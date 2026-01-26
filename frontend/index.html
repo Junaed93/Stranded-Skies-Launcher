@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Stranded Skies</title>
+    <link rel="stylesheet" href="css/main.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .login-container {
+            display: flex;
+            height: 100vh;
+            gap: 20px;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .video-section {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .video-section video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .video-placeholder {
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            position: absolute;
+        }
+
+        .right-section {
+            flex: 0 0 350px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-height: 100%;
+            overflow: hidden;
+        }
+
+        .game-title-box {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .game-title-box h1 {
+            font-size: 1.8rem;
+            color: var(--accent-color);
+            text-shadow: 0 0 20px var(--accent-glow);
+            margin: 0;
+        }
+
+        .login-box {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 20px;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .login-box h3 {
+            color: var(--accent-color);
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+
+        .login-box input {
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+            padding: 10px;
+        }
+
+        .button-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .button-row button {
+            flex: 1;
+        }
+
+        .divider {
+            border-top: 1px solid var(--glass-border);
+            margin: 10px 0;
+        }
+
+        .guest-btn {
+            width: 100%;
+            background: transparent;
+            border: 1px solid var(--accent-color);
+            color: var(--accent-color);
+        }
+
+        .guest-btn:hover {
+            background: rgba(0, 212, 255, 0.1);
+        }
+
+        .bottom-section {
+            display: flex;
+            gap: 10px;
+            flex: 0 0 auto;
+        }
+
+        .quest-box,
+        .leaderboard-box {
+            flex: 1;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 12px;
+        }
+
+        .quest-box h4,
+        .leaderboard-box h4 {
+            color: var(--accent-color);
+            margin-top: 0;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .quest-box ul,
+        .leaderboard-box ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 80px;
+            overflow-y: auto;
+        }
+
+        .quest-box li,
+        .leaderboard-box li {
+            padding: 5px;
+            border-bottom: 1px solid var(--glass-border);
+            font-size: 0.8rem;
+        }
+
+        .quest-box li:last-child,
+        .leaderboard-box li:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="login-container">
+        <!-- Left: Video -->
+        <div class="video-section">
+            <video autoplay muted loop playsinline controls id="bgVideo">
+                <source src="video/IMG_2776.MP4" type="video/mp4">
+            </video>
+            <span class="video-placeholder" id="videoPlaceholder">Add video to /video folder</span>
+        </div>
+
+        <!-- Right side -->
+        <div class="right-section">
+            <!-- Game Name -->
+            <div class="game-title-box">
+                <h1>Stranded Skies</h1>
+            </div>
+
+            <!-- Login Form -->
+            <!-- Auth Forms -->
+            <div class="login-box">
+                <!-- Login View -->
+                <div id="loginView">
+                    <h3>Login</h3>
+                    <input id="loginUser" placeholder="Username">
+                    <input id="loginPass" type="password" placeholder="Password">
+
+                    <div class="button-row">
+                        <button onclick="login()">Login</button>
+                    </div>
+
+                    <p style="text-align: center; margin: 10px 0; font-size: 0.9rem;">
+                        <a href="#" onclick="showRegister(); return false;" style="color: var(--accent-color);">Create
+                            an Account</a>
+                    </p>
+
+                    <div class="divider"></div>
+                    <button class="guest-btn" onclick="guest()">Play as Guest</button>
+                </div>
+
+                <!-- Register View -->
+                <div id="registerView" style="display: none;">
+                    <h3>Create Account</h3>
+                    <input id="regUser" placeholder="Choose Username">
+                    <input id="regPass" type="password" placeholder="Password">
+                    <input id="regPassConfirm" type="password" placeholder="Confirm Password">
+
+                    <div class="button-row">
+                        <button onclick="register()">Register</button>
+                    </div>
+
+                    <p style="text-align: center; margin: 10px 0; font-size: 0.9rem;">
+                        <a href="#" onclick="showLogin(); return false;" style="color: var(--accent-color);">Back to
+                            Login</a>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Bottom: Quest + Leaderboard -->
+            <div class="bottom-section">
+                <div class="quest-box">
+                    <h4>⚔️ Quest</h4>
+                    <ul id="questList">
+                        <li>Complete tutorial</li>
+                        <li>Defeat 10 enemies</li>
+                        <li>Reach level 5</li>
+                    </ul>
+                </div>
+                <div class="leaderboard-box">
+                    <h4>🏆 Leaderboard</h4>
+                    <ul id="leaderboardList">
+                        <li>Loading...</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script>
+        // Hide placeholder if video loads
+        const video = document.getElementById('bgVideo');
+        const placeholder = document.getElementById('videoPlaceholder');
+
+        video.onloadeddata = () => {
+            placeholder.style.display = 'none';
+        };
+        video.onerror = () => {
+            placeholder.style.display = 'block';
+        };
+
+        // Load leaderboard
+        fetch("http://localhost:8080/api/leaderboard")
+            .then(res => res.json())
+            .then(data => {
+                const ul = document.getElementById("leaderboardList");
+                ul.innerHTML = "";
+                if (data.length === 0) {
+                    ul.innerHTML = "<li>No scores yet</li>";
+                } else {
+                    data.slice(0, 5).forEach((e, i) => {
+                        const li = document.createElement("li");
+                        li.textContent = `${i + 1}. ${e.username} - ${e.score}`;
+                        ul.appendChild(li);
+                    });
+                }
+            })
+            .catch(() => {
+                document.getElementById("leaderboardList").innerHTML = "<li>Offline</li>";
+            });
+
+        function showRegister() {
+            document.getElementById('loginView').style.display = 'none';
+            document.getElementById('registerView').style.display = 'block';
+        }
+
+        function showLogin() {
+            document.getElementById('registerView').style.display = 'none';
+            document.getElementById('loginView').style.display = 'block';
+        }
+    </script>
+</body>
+
+</html>
