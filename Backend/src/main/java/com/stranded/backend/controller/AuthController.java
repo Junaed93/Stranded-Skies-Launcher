@@ -57,6 +57,16 @@ public class AuthController {
         }
     }
 
+    @GetMapping("/validate")
+    public ResponseEntity<?> validateToken(org.springframework.security.core.Authentication authentication) {
+        if (authentication == null) {
+            return ResponseEntity.status(401).body(Map.of("valid", false, "error", "No token or invalid token"));
+        }
+        return ResponseEntity.ok(Map.of(
+                "valid", true,
+                "username", authentication.getName()));
+    }
+
     // DTO
     public static class AuthRequest {
         private String username;

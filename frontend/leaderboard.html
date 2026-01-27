@@ -3,103 +3,296 @@
 
 <head>
     <title>Leaderboard - Stranded Skies</title>
-    <link rel="stylesheet" href="css/main.css">
+    <meta charset="UTF-8">
     <link rel="stylesheet" href="style.css">
     <style>
+        body {
+            display: block;
+            padding: 40px 20px;
+        }
+
+        .leaderboard-wrapper {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .lb-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .lb-header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        .lb-header p {
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        /* Your Score Banner */
         .score-banner {
-            background: rgba(255, 255, 255, 0.1);
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.15) 0%, rgba(76, 29, 149, 0.15) 100%);
             border: 1px solid var(--accent-color);
-            padding: 20px;
+            padding: 25px;
             border-radius: 16px;
             margin-bottom: 30px;
             text-align: center;
             display: none;
-            /* Hidden by default */
-            animation: slideDown 0.5s ease;
+            animation: pulse 2s ease-in-out infinite alternate;
         }
 
-        .score-banner h2 {
-            margin-bottom: 10px;
-            color: var(--text-primary);
-        }
-
-        .score-banner .highlight {
-            font-size: 2.5rem;
-            color: var(--accent-color);
-            text-shadow: 0 0 15px var(--accent-glow);
-            font-weight: 700;
-        }
-
-        @keyframes slideDown {
+        @keyframes pulse {
             from {
-                transform: translateY(-20px);
-                opacity: 0;
+                box-shadow: 0 0 20px rgba(0, 212, 255, 0.2);
             }
 
             to {
-                transform: translateY(0);
-                opacity: 1;
+                box-shadow: 0 0 40px rgba(0, 212, 255, 0.4);
             }
         }
 
-        .leaderboard-container {
-            max-width: 800px;
-            margin: 0 auto;
-            min-height: 80vh;
+        .score-banner h2 {
+            margin: 0 0 10px 0;
+            font-size: 1.5rem;
+        }
+
+        .score-value {
+            font-size: 4rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff 0%, var(--accent-color) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1;
+        }
+
+        .score-mode {
+            color: var(--text-secondary);
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+
+        .score-banner .btn {
+            margin-top: 20px;
+        }
+
+        /* Leaderboard Table */
+        .lb-table {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .lb-row {
+            display: grid;
+            grid-template-columns: 60px 1fr 100px 80px;
+            padding: 15px 20px;
+            align-items: center;
+            border-bottom: 1px solid var(--glass-border);
+            transition: background 0.2s ease;
+        }
+
+        .lb-row:last-child {
+            border-bottom: none;
+        }
+
+        .lb-row:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .lb-row.header {
+            background: rgba(0, 0, 0, 0.3);
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .lb-row.header:hover {
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        /* Rank Styling */
+        .rank {
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        .rank.gold {
+            color: #ffd700;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .rank.silver {
+            color: #c0c0c0;
+            text-shadow: 0 0 10px rgba(192, 192, 192, 0.5);
+        }
+
+        .rank.bronze {
+            color: #cd7f32;
+            text-shadow: 0 0 10px rgba(205, 127, 50, 0.5);
+        }
+
+        .player-name {
+            font-weight: 500;
+        }
+
+        .score {
+            color: var(--success-color);
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .game-mode {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            text-align: right;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        /* Back Button */
+        .back-row {
             display: flex;
-            flex-direction: column;
             justify-content: center;
+            margin-top: 30px;
         }
     </style>
 </head>
 
 <body>
 
-    <div class="leaderboard-container">
-        <!-- Your Score Section (For Guests/Post-Game) -->
-        <div id="yourScoreSection" class="score-banner">
-            <h2>GAME OVER</h2>
-            <p>You scored</p>
-            <div id="playerScore" class="highlight">0</div>
-            <p id="gameModeDisplay" style="color: var(--text-secondary); margin-top: 5px;">Mode: Unknown</p>
-
-            <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: center;">
-                <button onclick="window.location.href='index.html'" class="btn btn-primary">Login to Save Score</button>
-            </div>
-            <p style="font-size: 0.8rem; margin-top: 10px; color: var(--text-secondary);">
-                Creating an account will add this score to the global leaderboard.
-            </p>
+    <div class="leaderboard-wrapper">
+        <!-- Header -->
+        <div class="lb-header">
+            <h1>Leaderboard</h1>
+            <p>Top players in Stranded Skies</p>
         </div>
 
-        <!-- Global Leaderboard -->
-        <div class="glass-card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-                <h1 style="font-size: 2.5rem; margin: 0;">Leaderboard</h1>
-                <a href="index.html" class="btn btn-secondary">Back to Menu</a>
-            </div>
+        <!-- Your Score Banner (Hidden by default) -->
+        <div id="yourScoreSection" class="score-banner">
+            <h2>GAME OVER</h2>
+            <div id="playerScore" class="score-value">0</div>
+            <p id="gameModeDisplay" class="score-mode">Mode: Normal</p>
+            <button onclick="window.location.href='index.html'" class="btn btn-primary">Login to Save Score</button>
+        </div>
 
-            <div class="input-group" style="margin-bottom: 1rem;">
-                <input type="text" id="searchInput" class="input-field" placeholder="Search player..."
-                    onkeyup="filterLeaderboard()">
+        <!-- Leaderboard Table -->
+        <div class="lb-table">
+            <div class="lb-row header">
+                <span>Rank</span>
+                <span>Player</span>
+                <span>Score</span>
+                <span>Mode</span>
             </div>
-
-            <div class="leaderboard-list">
-                <div class="leaderboard-item"
-                    style="border-bottom: 2px solid var(--glass-border); padding-bottom: 10px;">
-                    <span class="rank" style="color: var(--text-secondary);">#</span>
-                    <span class="player-name" style="color: var(--text-secondary); font-weight: 600;">Player</span>
-                    <span class="score" style="color: var(--text-secondary);">Score</span>
-                    <span class="gamemode">Mode</span>
+            <div id="leaderboardBody">
+                <div class="empty-state">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <p>Loading scores...</p>
                 </div>
-                <!-- List Items -->
-                <ul id="list" style="list-style: none; padding: 0;">
-                    <li style="text-align: center; padding: 20px; color: var(--text-secondary);">Loading scores...</li>
-                </ul>
             </div>
+        </div>
+
+        <!-- Back Button -->
+        <div class="back-row">
+            <a href="index.html" class="btn btn-secondary">Back to Menu</a>
         </div>
     </div>
 
-    <script src="js/leaderboard.js"></script>
+    <script>
+        // Parse URL Parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const scoreParam = urlParams.get('score');
+        const modeParam = urlParams.get('mode');
+
+        // Show "Your Score" if params exist
+        if (scoreParam) {
+            document.getElementById('yourScoreSection').style.display = 'block';
+            document.getElementById('playerScore').textContent = scoreParam;
+            if (modeParam) {
+                document.getElementById('gameModeDisplay').textContent = `Mode: ${modeParam}`;
+            }
+        }
+
+        // Fetch Leaderboard
+        fetch("http://localhost:8080/api/leaderboard")
+            .then(res => {
+                if (!res.ok) throw new Error("API Offline");
+                return res.json();
+            })
+            .then(data => {
+                const container = document.getElementById('leaderboardBody');
+
+                if (data.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 12H4" />
+                            </svg>
+                            <p>No scores yet. Be the first!</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = data.map((entry, index) => {
+                    let rankClass = '';
+                    let rankDisplay = index + 1;
+
+                    if (index === 0) { rankClass = 'gold'; rankDisplay = '🥇'; }
+                    else if (index === 1) { rankClass = 'silver'; rankDisplay = '🥈'; }
+                    else if (index === 2) { rankClass = 'bronze'; rankDisplay = '🥉'; }
+
+                    return `
+                        <div class="lb-row">
+                            <span class="rank ${rankClass}">${rankDisplay}</span>
+                            <span class="player-name">${escapeHtml(entry.username)}</span>
+                            <span class="score">${entry.score.toLocaleString()}</span>
+                            <span class="game-mode">${entry.gameMode || 'Normal'}</span>
+                        </div>
+                    `;
+                }).join('');
+            })
+            .catch(err => {
+                console.error(err);
+                document.getElementById('leaderboardBody').innerHTML = `
+                    <div class="empty-state">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <p>Server offline. Try again later.</p>
+                    </div>
+                `;
+            });
+
+        function escapeHtml(text) {
+            if (!text) return "Unknown";
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+
 </body>
 
 </html>

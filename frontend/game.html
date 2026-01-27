@@ -3,8 +3,17 @@
 
 <head>
     <title>Game - Stranded Skies</title>
+    <meta charset="UTF-8">
+    <script src="js/session.js"></script>
     <link rel="stylesheet" href="css/main.css">
     <style>
+        /* Hide body until session validated */
+        body {
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
         /* Modal Styles */
         .modal {
             display: none;
@@ -78,7 +87,11 @@
         <div style="position: relative;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                 <h2 style="margin: 0;">Stranded Skies</h2>
-                <small id="connectionStatus" style="font-family: monospace;">Connecting Comms...</small>
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <span id="usernameDisplay" style="color: var(--accent-color); font-weight: 600;"></span>
+                    <small id="connectionStatus" style="font-family: monospace;">Connecting Comms...</small>
+                    <button onclick="logout()" style="padding: 5px 10px; font-size: 0.8rem;">Logout</button>
+                </div>
             </div>
             <iframe id="unity" width="960" height="600" style="border:none;"></iframe>
             <p style="text-align: center; color: var(--text-secondary); margin-top: 10px;">Hold <b>V</b> to talk</p>
@@ -216,6 +229,12 @@
             // Reload to refresh token in Iframe/Game
             window.location.reload();
         };
+
+        // Display username
+        const usernameEl = document.getElementById('usernameDisplay');
+        if (usernameEl) {
+            usernameEl.textContent = localStorage.getItem('username') || '';
+        }
     </script>
 
 </body>

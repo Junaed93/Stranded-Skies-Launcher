@@ -3,6 +3,7 @@
 
 <head>
     <title>Stranded Skies</title>
+    <meta charset="UTF-8">
     <link rel="stylesheet" href="css/main.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
@@ -126,7 +127,6 @@
             flex: 0 0 auto;
         }
 
-        .quest-box,
         .leaderboard-box {
             flex: 1;
             background: var(--glass-bg);
@@ -134,9 +134,17 @@
             border: 1px solid var(--glass-border);
             border-radius: 12px;
             padding: 12px;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            text-decoration: none;
+            display: block;
         }
 
-        .quest-box h4,
+        .leaderboard-box:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 15px var(--accent-glow);
+        }
+
         .leaderboard-box h4 {
             color: var(--accent-color);
             margin-top: 0;
@@ -144,7 +152,6 @@
             font-size: 0.9rem;
         }
 
-        .quest-box ul,
         .leaderboard-box ul {
             list-style: none;
             padding: 0;
@@ -153,14 +160,12 @@
             overflow-y: auto;
         }
 
-        .quest-box li,
         .leaderboard-box li {
             padding: 5px;
             border-bottom: 1px solid var(--glass-border);
             font-size: 0.8rem;
         }
 
-        .quest-box li:last-child,
         .leaderboard-box li:last-child {
             border-bottom: none;
         }
@@ -224,22 +229,14 @@
                 </div>
             </div>
 
-            <!-- Bottom: Quest + Leaderboard -->
+            <!-- Bottom: Leaderboard Only -->
             <div class="bottom-section">
-                <div class="quest-box">
-                    <h4>⚔️ Quest</h4>
-                    <ul id="questList">
-                        <li>Complete tutorial</li>
-                        <li>Defeat 10 enemies</li>
-                        <li>Reach level 5</li>
-                    </ul>
-                </div>
-                <div class="leaderboard-box">
-                    <h4>🏆 Leaderboard</h4>
+                <a href="leaderboard.html" class="leaderboard-box">
+                    <h4>Leaderboard</h4>
                     <ul id="leaderboardList">
                         <li>Loading...</li>
                     </ul>
-                </div>
+                </a>
             </div>
         </div>
     </div>

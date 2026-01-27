@@ -5,10 +5,12 @@ import com.stranded.backend.repository.UserRepository;
 import com.stranded.backend.security.JwtUtil;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
 @Service
+@Transactional
 public class AuthService {
 
     private final UserRepository userRepository;
@@ -22,7 +24,9 @@ public class AuthService {
     }
 
     public String register(String username, String password) {
+        System.out.println("[AuthService] Attempting to register user: " + username);
         if (userRepository.findByUsername(username).isPresent()) {
+            System.out.println("[AuthService] Username already exists: " + username);
             throw new RuntimeException("Username already exists");
         }
         User user = new User();
@@ -30,17 +34,31 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(password));
         user.setGuest(false);
         userRepository.save(user);
+        System.out.println("[AuthService] User registered successfully: " + username);
+        System.out.println("[AuthService] Total users in DB: " + userRepository.count());
         return jwtUtil.generateToken(username, false);
     }
 
     public String login(String username, String password) {
+        System.out.println("[AuthService] Attempting to login user: " + username);
+        System.out.println("[AuthService] Total users in DB: " + userRepository.count());
+
+        // Debug: List all usernames
+        userRepository.findAll().forEach(
+                u -> System.out.println("[AuthService] DB User: " + u.getUsername() + " (guest=" + u.isGuest() + ")"));
+
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> {
+                    System.out.println("[AuthService] User NOT found: " + username);
+                    return new RuntimeException("User not found");
+                });
 
         if (!passwordEncoder.matches(password, user.getPassword())) {
+            System.out.println("[AuthService] Invalid password for: " + username);
             throw new RuntimeException("Invalid credentials");
         }
 
+        System.out.println("[AuthService] Login successful for: " + username);
         return jwtUtil.generateToken(username, false);
     }
 
