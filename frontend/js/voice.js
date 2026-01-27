@@ -14,7 +14,7 @@ const myPeerId = "peer_" + Math.random().toString(36).substr(2, 9);
 console.log("[Voice] My Peer ID:", myPeerId);
 
 let localStream = null;
-let peerConnections = {}; // Multiple peers support
+let peerConnections = {}; // peerId -> RTCPeerConnection
 let isVoiceActive = false;
 
 // Visual indicator
@@ -41,14 +41,8 @@ function createVoiceIndicator() {
     `;
     document.body.appendChild(voiceIndicator);
     
-    // Add pulse animation
     const style = document.createElement('style');
-    style.textContent = `
-        @keyframes pulse {
-            from { opacity: 0.7; }
-            to { opacity: 1; }
-        }
-    `;
+    style.textContent = `@keyframes pulse { from { opacity: 0.7; } to { opacity: 1; } }`;
     document.head.appendChild(style);
 }
 
@@ -66,7 +60,7 @@ function initVoice() {
     stomp.subscribe("/topic/voice", function(response) {
         const data = JSON.parse(response.body);
         
-        // IMPORTANT: Ignore messages from self
+        // Ignore messages from self
         if (data.senderId === myPeerId) {
             return;
         }
@@ -88,13 +82,11 @@ function initVoice() {
                 break;
         }
     });
-    
-    // Announce presence
-    sendSignal({ type: "join" });
 }
 
 function sendSignal(data) {
     data.senderId = myPeerId;
+    console.log("[Voice] Sending signal:", data.type);
     stomp.send("/app/voice", {}, JSON.stringify(data));
 }
 
@@ -114,16 +106,18 @@ async function startVoice() {
             }
         });
         
-        console.log("[Voice] Microphone access granted");
+        console.log("[Voice] Microphone access granted, tracks:", localStream.getTracks().length);
         
         // Show indicator
         if (voiceIndicator) voiceIndicator.style.display = 'block';
         
-        // Create peer connection and send offer
-        const pc = createPeerConnection("broadcast");
+        // Create peer connection
+        const pc = createPeerConnection(myPeerId);
+        peerConnections["outgoing"] = pc;
         
-        // Add local tracks
+        // Add local tracks to connection
         localStream.getTracks().forEach(track => {
+            console.log("[Voice] Adding track:", track.kind);
             pc.addTrack(track, localStream);
         });
         
@@ -133,7 +127,10 @@ async function startVoice() {
         
         sendSignal({
             type: "offer",
-            offer: offer
+            offer: {
+                type: offer.type,
+                sdp: offer.sdp
+            }
         });
         
         console.log("[Voice] Offer sent!");
@@ -164,6 +161,9 @@ function stopVoice() {
     });
     peerConnections = {};
     
+    // Remove all remote audio elements
+    document.querySelectorAll('audio[id^="audio_"]').forEach(el => el.remove());
+    
     // Hide indicator
     if (voiceIndicator) voiceIndicator.style.display = 'none';
     
@@ -177,43 +177,64 @@ function createPeerConnection(peerId) {
     console.log("[Voice] Creating peer connection for:", peerId);
     
     const pc = new RTCPeerConnection(peerConfig);
-    peerConnections[peerId] = pc;
     
     pc.onicecandidate = (event) => {
         if (event.candidate) {
+            console.log("[Voice] ICE candidate generated");
             sendSignal({
                 type: "candidate",
-                candidate: event.candidate,
-                targetId: peerId
+                candidate: {
+                    candidate: event.candidate.candidate,
+                    sdpMid: event.candidate.sdpMid,
+                    sdpMLineIndex: event.candidate.sdpMLineIndex
+                }
             });
         }
     };
     
     pc.ontrack = (event) => {
-        console.log("[Voice] Received remote track from:", peerId);
+        console.log("[Voice] RECEIVED REMOTE TRACK!", event.streams);
         
-        // Remove existing audio for this peer
+        // Remove existing audio
         const existingAudio = document.getElementById('audio_' + peerId);
         if (existingAudio) existingAudio.remove();
         
-        // Create new audio element
+        // Create audio element
         const audio = document.createElement('audio');
         audio.id = 'audio_' + peerId;
-        audio.srcObject = event.streams[0];
         audio.autoplay = true;
         audio.volume = 1.0;
+        
+        if (event.streams && event.streams[0]) {
+            audio.srcObject = event.streams[0];
+        } else {
+            // Fallback: create stream from track
+            const stream = new MediaStream();
+            stream.addTrack(event.track);
+            audio.srcObject = stream;
+        }
+        
         document.body.appendChild(audio);
         
-        audio.play().then(() => {
-            console.log("[Voice] Audio playing from:", peerId);
-        }).catch(e => {
-            console.warn("[Voice] Autoplay blocked - click page to enable");
-            document.addEventListener('click', () => audio.play(), { once: true });
-        });
+        // Force play
+        audio.play()
+            .then(() => console.log("[Voice] Audio playing!"))
+            .catch(e => {
+                console.warn("[Voice] Autoplay blocked, click anywhere to enable");
+                const enableAudio = () => {
+                    audio.play();
+                    document.removeEventListener('click', enableAudio);
+                };
+                document.addEventListener('click', enableAudio);
+            });
     };
     
     pc.onconnectionstatechange = () => {
         console.log("[Voice] Connection state:", pc.connectionState);
+    };
+    
+    pc.oniceconnectionstatechange = () => {
+        console.log("[Voice] ICE state:", pc.iceConnectionState);
     };
     
     return pc;
@@ -222,43 +243,77 @@ function createPeerConnection(peerId) {
 async function handleOffer(data) {
     console.log("[Voice] Handling offer from:", data.senderId);
     
-    const pc = createPeerConnection(data.senderId);
-    
-    await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
-    
-    // Create answer
-    const answer = await pc.createAnswer();
-    await pc.setLocalDescription(answer);
-    
-    sendSignal({
-        type: "answer",
-        answer: answer,
-        targetId: data.senderId
-    });
-    
-    console.log("[Voice] Answer sent to:", data.senderId);
+    try {
+        // Create a new peer connection for this sender
+        const pc = createPeerConnection(data.senderId);
+        peerConnections[data.senderId] = pc;
+        
+        // Set remote description (the offer)
+        await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
+        console.log("[Voice] Remote description set");
+        
+        // Create answer
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        console.log("[Voice] Local description set");
+        
+        sendSignal({
+            type: "answer",
+            answer: {
+                type: answer.type,
+                sdp: answer.sdp
+            },
+            targetId: data.senderId
+        });
+        
+        console.log("[Voice] Answer sent to:", data.senderId);
+    } catch (err) {
+        console.error("[Voice] Error handling offer:", err);
+    }
 }
 
 async function handleAnswer(data) {
     console.log("[Voice] Handling answer from:", data.senderId);
     
-    const pc = peerConnections["broadcast"] || peerConnections[data.senderId];
-    if (pc && pc.signalingState !== 'stable') {
-        await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
-        console.log("[Voice] Remote description set");
+    const pc = peerConnections["outgoing"];
+    if (!pc) {
+        console.warn("[Voice] No outgoing connection found");
+        return;
+    }
+    
+    try {
+        if (pc.signalingState === 'have-local-offer') {
+            await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
+            console.log("[Voice] Remote description set from answer");
+        } else {
+            console.warn("[Voice] Unexpected signaling state:", pc.signalingState);
+        }
+    } catch (err) {
+        console.error("[Voice] Error handling answer:", err);
     }
 }
 
 async function handleCandidate(data) {
-    // Find the right peer connection
-    const pc = peerConnections["broadcast"] || peerConnections[data.senderId];
+    console.log("[Voice] Handling ICE candidate from:", data.senderId);
     
-    if (pc && data.candidate) {
-        try {
-            await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
-        } catch (e) {
-            console.warn("[Voice] ICE candidate error:", e);
-        }
+    // Try to find the right peer connection
+    let pc = peerConnections[data.senderId] || peerConnections["outgoing"];
+    
+    if (!pc) {
+        console.warn("[Voice] No peer connection found for candidate");
+        return;
+    }
+    
+    if (!data.candidate) {
+        console.warn("[Voice] Empty candidate received");
+        return;
+    }
+    
+    try {
+        await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
+        console.log("[Voice] ICE candidate added");
+    } catch (e) {
+        console.warn("[Voice] ICE candidate error:", e.message);
     }
 }
 
