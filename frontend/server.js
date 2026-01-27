@@ -19,27 +19,21 @@ const MIME_TYPES = {
 };
 
 const server = http.createServer((req, res) => {
-    // Normalize path
     let urlPath = req.url.split('?')[0];
     if (urlPath === '/' || urlPath === '/login') urlPath = '/index.html';
     
     const safePath = path.normalize(urlPath).replace(/^(\.\.[\/\\])+/, '');
     const filePath = path.join(ROOT, safePath);
 
-    // Try to find the file
     fs.stat(filePath, (err, stats) => {
         if (!err && stats.isFile()) {
-            // File exists exactly as requested
             serveFile(filePath, res, urlPath);
         } else {
-            // File not found, try looking for a .br version
             const brPath = filePath + '.br';
             fs.stat(brPath, (errBr, statsBr) => {
                 if (!errBr && statsBr.isFile()) {
-                    // Found .br version! Serve it decompressed.
                     serveDecompressed(brPath, res, urlPath);
                 } else {
-                    // Not found anywhere
                     res.writeHead(404, {'Content-Type': 'text/plain'});
                     res.end('404 Not Found: ' + urlPath);
                 }
@@ -51,9 +45,7 @@ const server = http.createServer((req, res) => {
 function serveFile(filePath, res, urlPath) {
     const ext = path.extname(filePath);
     
-    // Handle .br files - Unity expects Content-Encoding: br
     if (ext === '.br') {
-        // Get the actual extension (e.g., .js from .js.br)
         const actualExt = path.extname(filePath.slice(0, -3));
         const contentType = MIME_TYPES[actualExt] || 'application/octet-stream';
         
@@ -80,7 +72,6 @@ function serveFile(filePath, res, urlPath) {
 }
 
 function serveDecompressed(brPath, res, originalUrl) {
-    // Determine content type based on the ORIGINAL requested request (stripping .br is implied since we added it)
     const ext = path.extname(originalUrl); 
     const contentType = MIME_TYPES[ext] || 'application/octet-stream';
 

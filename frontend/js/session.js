@@ -1,21 +1,15 @@
-// ========================================
-// SESSION GUARD - Protect pages requiring login
-// ========================================
-
 const SESSION_API = "http://localhost:8080/auth/validate";
 
 (function() {
     const token = localStorage.getItem("token");
     const username = localStorage.getItem("username");
 
-    // No token at all - redirect immediately
     if (!token) {
         console.log("[Session] No token found, redirecting to login...");
         redirectToLogin();
         return;
     }
 
-    // Validate token with backend
     validateSession(token);
 })();
 

@@ -32,8 +32,6 @@ public class Score {
         this.timestamp = timestamp;
     }
 
-    // Getters and Setters
-
     public Long getId() {
         return id;
     }

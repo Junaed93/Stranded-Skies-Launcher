@@ -1,4 +1,3 @@
-/* Stranded Skies - Premium Glassmorphism Theme */
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
 
 :root {
@@ -116,7 +115,6 @@ button:hover {
     border: 1px solid var(--glass-border);
 }
 
-/* Scrollbar */
 ::-webkit-scrollbar {
     width: 8px;
 }

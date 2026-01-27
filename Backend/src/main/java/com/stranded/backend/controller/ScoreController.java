@@ -25,9 +25,6 @@ public class ScoreController {
 
         String username = authentication.getName();
 
-        // request.getPlayerId() is ignored as per rules: "Backend must NOT trust
-        // playerId from client"
-
         scoreService.submitScore(username, request.getFinalScore(), request.getGameMode(), request.getTimestamp());
 
         return ResponseEntity.ok(Map.of("message", "Score submitted successfully"));

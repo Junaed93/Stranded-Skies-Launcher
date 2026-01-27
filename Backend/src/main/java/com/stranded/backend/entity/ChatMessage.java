@@ -11,7 +11,7 @@ public class ChatMessage {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String sender; // Username
+    private String sender;
 
     private String content;
 
@@ -31,7 +31,6 @@ public class ChatMessage {
         this.timestamp = LocalDateTime.now();
     }
 
-    // Getters and Setters
     public Long getId() {
         return id;
     }

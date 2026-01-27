@@ -43,7 +43,6 @@ public class AuthService {
         System.out.println("[AuthService] Attempting to login user: " + username);
         System.out.println("[AuthService] Total users in DB: " + userRepository.count());
 
-        // Debug: List all usernames
         userRepository.findAll().forEach(
                 u -> System.out.println("[AuthService] DB User: " + u.getUsername() + " (guest=" + u.isGuest() + ")"));
 
@@ -67,7 +66,6 @@ public class AuthService {
         User user = new User();
         user.setUsername(username);
         user.setGuest(true);
-        // Guests have no password
         userRepository.save(user);
         String token = jwtUtil.generateToken(username, true);
         return new GuestLoginResult(token, username);

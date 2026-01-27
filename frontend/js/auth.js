@@ -47,7 +47,6 @@ async function register() {
       return;
   }
 
-  // Check if current user is Guest
   const currentToken = localStorage.getItem("token");
   const currentUsername = localStorage.getItem("username");
   const isGuest = currentUsername && currentUsername.startsWith("Guest_");

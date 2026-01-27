@@ -1,28 +1,20 @@
-// Parse URL Parameters
 const urlParams = new URLSearchParams(window.location.search);
 const scoreParam = urlParams.get('score');
 const modeParam = urlParams.get('mode');
 
-// DOM Elements
 const yourScoreSection = document.getElementById('yourScoreSection');
 const playerScoreEl = document.getElementById('playerScore');
 const gameModeDisplay = document.getElementById('gameModeDisplay');
 const listElement = document.getElementById('list');
 
-// 1. Handle "Your Score" Display
 if (scoreParam) {
     yourScoreSection.style.display = 'block';
     playerScoreEl.textContent = scoreParam;
     if (modeParam) {
         gameModeDisplay.textContent = `Mode: ${modeParam}`;
     }
-    
-    // If user is already logged in locally but was redirected with params (Edge case or specific design choice)
-    // We could offer to "Quick Save" here, but for now strict "Back to Menu to Login" is safer.
-    // Optionally: Automatically try to post if we have a token (Recovery flow).
 }
 
-// 2. Fetch Leaderboard Data
 fetch("http://localhost:8080/api/leaderboard")
     .then(res => {
         if (!res.ok) throw new Error("API Offline");
@@ -36,14 +28,10 @@ fetch("http://localhost:8080/api/leaderboard")
             return;
         }
 
-        // Sort just in case backend didn't (though backend should)
-        // data.sort((a, b) => b.score - a.score); 
-
         data.forEach((e, index) => {
             const li = document.createElement("li");
             li.className = "leaderboard-item";
             
-            // Medals for top 3
             let rankDisplay = index + 1;
             if (index === 0) rankDisplay = "🥇";
             if (index === 1) rankDisplay = "🥈";
@@ -63,7 +51,6 @@ fetch("http://localhost:8080/api/leaderboard")
         listElement.innerHTML = '<li style="text-align: center; padding: 20px; color: var(--danger-color);">Failed to load leaderboard. Server might be offline.</li>';
     });
 
-// Helper: Prevent XSS
 function escapeHtml(text) {
     if (!text) return "Unknown";
     return text

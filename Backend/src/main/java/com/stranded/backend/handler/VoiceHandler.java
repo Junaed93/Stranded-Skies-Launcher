@@ -13,7 +13,6 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class VoiceHandler extends TextWebSocketHandler {
 
-    // Thread-safe set of sessions
     private final Set<WebSocketSession> sessions = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     @Override
@@ -23,8 +22,6 @@ public class VoiceHandler extends TextWebSocketHandler {
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-        // Signaling relay: just broadcast to everyone else (MVP)
-        // In a real app, you'd target specific peers
         for (WebSocketSession s : sessions) {
             if (s.isOpen() && !s.getId().equals(session.getId())) {
                 s.sendMessage(message);

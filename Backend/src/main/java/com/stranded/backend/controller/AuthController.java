@@ -67,7 +67,6 @@ public class AuthController {
                 "username", authentication.getName()));
     }
 
-    // DTO
     public static class AuthRequest {
         private String username;
         private String password;

@@ -31,11 +31,6 @@ public class ChatHandler extends TextWebSocketHandler {
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-        // Assume message payload is JSON: {"sender": "...", "content": "..."}
-        // Ideally we would validate token from query param or header, but for MVP
-        // standard WS:
-        // We trust the sender in the message or minimal validation.
-
         try {
             @SuppressWarnings("unchecked")
             Map<String, String> payload = objectMapper.readValue(message.getPayload(), Map.class);
@@ -43,11 +38,9 @@ public class ChatHandler extends TextWebSocketHandler {
             String content = payload.get("content");
 
             if (sender != null && content != null) {
-                // Save to DB
                 ChatMessage chatMessage = new ChatMessage(sender, content);
                 chatMessageRepository.save(chatMessage);
 
-                // Broadcast
                 String broadcastMessage = objectMapper.writeValueAsString(chatMessage);
                 for (WebSocketSession s : sessions) {
                     if (s.isOpen()) {

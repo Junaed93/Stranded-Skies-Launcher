@@ -175,7 +175,6 @@
 
 <body>
     <div class="login-container">
-        <!-- Left: Video -->
         <div class="video-section">
             <video autoplay muted loop playsinline controls id="bgVideo">
                 <source src="video/IMG_2776.MP4" type="video/mp4">
@@ -183,17 +182,12 @@
             <span class="video-placeholder" id="videoPlaceholder">Add video to /video folder</span>
         </div>
 
-        <!-- Right side -->
         <div class="right-section">
-            <!-- Game Name -->
             <div class="game-title-box">
                 <h1>Stranded Skies</h1>
             </div>
 
-            <!-- Login Form -->
-            <!-- Auth Forms -->
             <div class="login-box">
-                <!-- Login View -->
                 <div id="loginView">
                     <h3>Login</h3>
                     <input id="loginUser" placeholder="Username">
@@ -212,7 +206,6 @@
                     <button class="guest-btn" onclick="guest()">Play as Guest</button>
                 </div>
 
-                <!-- Register View -->
                 <div id="registerView" style="display: none;">
                     <h3>Create Account</h3>
                     <input id="regUser" placeholder="Choose Username">
@@ -230,7 +223,6 @@
                 </div>
             </div>
 
-            <!-- Bottom: Leaderboard Only -->
             <div class="bottom-section">
                 <a href="leaderboard.html" class="leaderboard-box">
                     <h4>Leaderboard</h4>
@@ -244,7 +236,6 @@
 
     <script src="js/auth.js"></script>
     <script>
-        // Hide placeholder if video loads
         const video = document.getElementById('bgVideo');
         const placeholder = document.getElementById('videoPlaceholder');
 
@@ -255,7 +246,6 @@
             placeholder.style.display = 'block';
         };
 
-        // Load leaderboard
         fetch("http://localhost:8080/api/leaderboard")
             .then(res => res.json())
             .then(data => {

@@ -23,11 +23,11 @@ public class LeaderboardController {
 
     @GetMapping
     public ResponseEntity<List<LeaderboardEntry>> getLeaderboard() {
-        List<Score> topScores = scoreRepository.findTopScores(PageRequest.of(0, 50)); // Fetch more to filter
+        List<Score> topScores = scoreRepository.findTopScores(PageRequest.of(0, 50));
 
         List<LeaderboardEntry> leaderboard = topScores.stream()
-                .filter(score -> !score.getUser().isGuest()) // Hide guests
-                .limit(10) // Top 10 registered users
+                .filter(score -> !score.getUser().isGuest())
+                .limit(10)
                 .map(score -> new LeaderboardEntry(
                         score.getUser().getUsername(),
                         score.getFinalScore(),

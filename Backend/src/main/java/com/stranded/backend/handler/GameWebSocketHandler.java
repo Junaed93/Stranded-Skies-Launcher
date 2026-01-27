@@ -12,10 +12,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * WebSocket handler for Unity game multiplayer sync.
- * Handles JOIN, MOVE, LEAVE messages and broadcasts to all connected clients.
- */
 public class GameWebSocketHandler extends TextWebSocketHandler {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
@@ -39,14 +35,12 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
 
         switch (type) {
             case "JOIN":
-                // Broadcast join to all other players
                 broadcastToOthers(session, objectMapper.writeValueAsString(Map.of(
                         "type", "JOIN",
                         "id", playerId)));
                 break;
 
             case "MOVE":
-                // Broadcast movement to all other players
                 Map<String, Object> moveData = Map.of(
                         "type", "MOVE",
                         "id", playerId,
@@ -58,7 +52,6 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
                 break;
 
             default:
-                // Forward any other message types
                 broadcastToOthers(session, payload);
                 break;
         }
@@ -70,7 +63,6 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
         sessions.remove(session.getId());
 
         if (playerId != null) {
-            // Broadcast leave to all remaining players
             String leaveMessage = objectMapper.writeValueAsString(Map.of(
                     "type", "LEAVE",
                     "id", playerId));
