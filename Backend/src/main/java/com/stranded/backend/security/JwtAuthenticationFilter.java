@@ -34,10 +34,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String token = header.substring(7);
             if (jwtUtil.validateToken(token)) {
                 String username = jwtUtil.getUsernameFromToken(token);
-
-                // For MVP, we don't load full details from DB here for speed,
-                // but usually you would load the user.
-                // Creating a simple UserDetails object.
                 UserDetails userDetails = new User(username, "", Collections.emptyList());
 
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(

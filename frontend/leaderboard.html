@@ -4,15 +4,99 @@
 <head>
     <title>Leaderboard - Stranded Skies</title>
     <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .score-banner {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--accent-color);
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 30px;
+            text-align: center;
+            display: none;
+            /* Hidden by default */
+            animation: slideDown 0.5s ease;
+        }
+
+        .score-banner h2 {
+            margin-bottom: 10px;
+            color: var(--text-primary);
+        }
+
+        .score-banner .highlight {
+            font-size: 2.5rem;
+            color: var(--accent-color);
+            text-shadow: 0 0 15px var(--accent-glow);
+            font-weight: 700;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .leaderboard-container {
+            max-width: 800px;
+            margin: 0 auto;
+            min-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+    </style>
 </head>
 
 <body>
 
-    <div style="max-width: 600px; margin: 0 auto; padding-top: 50px;">
-        <h2>Leaderboard</h2>
-        <ul id="list" style="padding: 0;"></ul>
-        <br>
-        <a href="index.html" style="color: var(--accent-color);">Back to Menu</a>
+    <div class="leaderboard-container">
+        <!-- Your Score Section (For Guests/Post-Game) -->
+        <div id="yourScoreSection" class="score-banner">
+            <h2>GAME OVER</h2>
+            <p>You scored</p>
+            <div id="playerScore" class="highlight">0</div>
+            <p id="gameModeDisplay" style="color: var(--text-secondary); margin-top: 5px;">Mode: Unknown</p>
+
+            <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: center;">
+                <button onclick="window.location.href='index.html'" class="btn btn-primary">Login to Save Score</button>
+            </div>
+            <p style="font-size: 0.8rem; margin-top: 10px; color: var(--text-secondary);">
+                Creating an account will add this score to the global leaderboard.
+            </p>
+        </div>
+
+        <!-- Global Leaderboard -->
+        <div class="glass-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <h1 style="font-size: 2.5rem; margin: 0;">Leaderboard</h1>
+                <a href="index.html" class="btn btn-secondary">Back to Menu</a>
+            </div>
+
+            <div class="input-group" style="margin-bottom: 1rem;">
+                <input type="text" id="searchInput" class="input-field" placeholder="Search player..."
+                    onkeyup="filterLeaderboard()">
+            </div>
+
+            <div class="leaderboard-list">
+                <div class="leaderboard-item"
+                    style="border-bottom: 2px solid var(--glass-border); padding-bottom: 10px;">
+                    <span class="rank" style="color: var(--text-secondary);">#</span>
+                    <span class="player-name" style="color: var(--text-secondary); font-weight: 600;">Player</span>
+                    <span class="score" style="color: var(--text-secondary);">Score</span>
+                    <span class="gamemode">Mode</span>
+                </div>
+                <!-- List Items -->
+                <ul id="list" style="list-style: none; padding: 0;">
+                    <li style="text-align: center; padding: 20px; color: var(--text-secondary);">Loading scores...</li>
+                </ul>
+            </div>
+        </div>
     </div>
 
     <script src="js/leaderboard.js"></script>
