@@ -50,7 +50,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
+        // Skip JWT filter for public endpoints only
+        // Do NOT skip /auth/validate as it needs token validation
         return path.startsWith("/h2-console")
-                || path.startsWith("/auth");
+                || path.equals("/auth/login")
+                || path.equals("/auth/register")
+                || path.equals("/auth/guest")
+                || path.equals("/auth/upgrade");
     }
 }
