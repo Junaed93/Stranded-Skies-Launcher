@@ -1,7 +1,7 @@
 const token = localStorage.getItem("token");
 
 if (!token) {
-  window.location.href = "index.html";
+  window.location.href = "launcher.html";
 }
 
 document.getElementById("unity").src =

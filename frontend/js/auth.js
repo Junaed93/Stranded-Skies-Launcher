@@ -1,9 +1,9 @@
-const API = "http://localhost:8080";
+const API = CONFIG.API_URL;
 
 function saveToken(token, username, isUpgrade = false) {
   localStorage.setItem("token", token);
   localStorage.setItem("username", username);
-  window.location.href = "game.html";
+  window.location.href = "index.html";
 }
 
 async function login() {

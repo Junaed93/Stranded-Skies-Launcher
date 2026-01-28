@@ -3,10 +3,10 @@ spring:
     name: UnityBackend
 
   datasource:
-    url: jdbc:h2:file:D:/Launcher/Backend/data/game;DB_CLOSE_DELAY=-1;AUTO_RECONNECT=TRUE
+    url: ${DB_URL:jdbc:h2:file:./data/game;DB_CLOSE_DELAY=-1;AUTO_RECONNECT=TRUE}
     driver-class-name: org.h2.Driver
-    username: sa
-    password: password
+    username: ${DB_USERNAME:sa}
+    password: ${DB_PASSWORD:password}
 
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
@@ -19,8 +19,8 @@ spring:
       path: /h2-console
 
 server:
-  port: 8080
+  port: ${PORT:8080}
 
 jwt:
-  secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+  secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
   expiration: 86400000

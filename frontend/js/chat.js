@@ -1,4 +1,4 @@
-let socket = new SockJS("http://localhost:8080/ws");
+let socket = new SockJS(`${CONFIG.API_URL}/ws`);
 let stomp = Stomp.over(socket);
 let isChatConnected = false;
 

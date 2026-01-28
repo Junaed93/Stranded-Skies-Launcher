@@ -63,6 +63,7 @@
             font-size: 4rem;
             font-weight: 700;
             background: linear-gradient(135deg, #fff 0%, var(--accent-color) 100%);
+            background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             line-height: 1;
@@ -191,7 +192,7 @@
             <h2>GAME OVER</h2>
             <div id="playerScore" class="score-value">0</div>
             <p id="gameModeDisplay" class="score-mode">Mode: Normal</p>
-            <button onclick="window.location.href='index.html'" class="btn btn-primary">Login to Save Score</button>
+            <button onclick="window.location.href='launcher.html'" class="btn btn-primary">Login to Save Score</button>
         </div>
 
         <!-- Leaderboard Table -->
@@ -215,10 +216,11 @@
 
         <!-- Back Button -->
         <div class="back-row">
-            <a href="index.html" class="btn btn-secondary">Back to Menu</a>
+            <a href="launcher.html" class="btn btn-secondary">Back to Menu</a>
         </div>
     </div>
 
+    <script src="js/config.js"></script>
     <script>
         // Parse URL Parameters
         const urlParams = new URLSearchParams(window.location.search);
@@ -235,7 +237,7 @@
         }
 
         // Fetch Leaderboard
-        fetch("http://localhost:8080/api/leaderboard")
+        fetch(`${CONFIG.API_URL}/api/leaderboard`)
             .then(res => {
                 if (!res.ok) throw new Error("API Offline");
                 return res.json();

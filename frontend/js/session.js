@@ -1,4 +1,4 @@
-const SESSION_API = "http://localhost:8080/auth/validate";
+const SESSION_API = `${CONFIG.API_URL}/auth/validate`;
 
 (function() {
     const token = localStorage.getItem("token");
@@ -53,7 +53,7 @@ function clearSession() {
 }
 
 function redirectToLogin() {
-    window.location.href = "index.html";
+    window.location.href = "launcher.html";
 }
 
 function showPage() {

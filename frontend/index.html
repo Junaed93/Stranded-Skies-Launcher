@@ -2,279 +2,242 @@
 <html>
 
 <head>
-    <title>Stranded Skies</title>
+    <title>Game - Stranded Skies</title>
     <meta charset="UTF-8">
+    <script src="js/config.js"></script>
+    <script src="js/session.js"></script>
     <link rel="stylesheet" href="css/main.css">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        html,
+        /* Hide body until session validated */
         body {
-            margin: 0;
-            padding: 0;
-            height: 100vh;
-            overflow: hidden;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.3s;
         }
 
-        .login-container {
-            display: flex;
-            height: 100vh;
-            gap: 20px;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-
-        .video-section {
-            flex: 1;
-            background: rgba(0, 0, 0, 0.5);
-            border: 1px solid var(--glass-border);
-            border-radius: 16px;
-            overflow: hidden;
-            display: flex;
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
             align-items: center;
             justify-content: center;
         }
 
-        .video-section video {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
-
-        .video-placeholder {
-            color: var(--text-secondary);
-            font-size: 1.2rem;
-            position: absolute;
-        }
-
-        .right-section {
-            flex: 0 0 350px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            max-height: 100%;
-            overflow: hidden;
-        }
-
-        .game-title-box {
+        .modal-content {
             background: var(--glass-bg);
-            backdrop-filter: blur(12px);
             border: 1px solid var(--glass-border);
+            margin: auto;
+            padding: 20px;
             border-radius: 12px;
-            padding: 15px;
+            width: 80%;
+            max-width: 400px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: var(--accent-color);
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .auth-view h3 {
+            margin-top: 0;
             text-align: center;
         }
 
-        .game-title-box h1 {
-            font-size: 1.8rem;
-            color: var(--accent-color);
-            text-shadow: 0 0 20px var(--accent-glow);
-            margin: 0;
-        }
-
-        .login-box {
-            background: var(--glass-bg);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--glass-border);
-            border-radius: 12px;
-            padding: 20px;
-            flex: 1;
-            min-height: 0;
-        }
-
-        .login-box h3 {
-            color: var(--accent-color);
-            margin-top: 0;
-            margin-bottom: 10px;
-            font-size: 1rem;
-        }
-
-        .login-box input {
+        .auth-view input {
             width: 100%;
             box-sizing: border-box;
-            margin-bottom: 10px;
-            padding: 10px;
         }
 
-        .button-row {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-
-        .button-row button {
-            flex: 1;
-        }
-
-        .divider {
-            border-top: 1px solid var(--glass-border);
-            margin: 10px 0;
-        }
-
-        .guest-btn {
+        .auth-view button {
             width: 100%;
-            background: transparent;
-            border: 1px solid var(--accent-color);
+        }
+
+        .link-text {
             color: var(--accent-color);
-        }
-
-        .guest-btn:hover {
-            background: rgba(0, 212, 255, 0.1);
-        }
-
-        .bottom-section {
-            display: flex;
-            gap: 10px;
-            flex: 0 0 auto;
-        }
-
-        .leaderboard-box {
-            flex: 1;
-            background: var(--glass-bg);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--glass-border);
-            border-radius: 12px;
-            padding: 12px;
             cursor: pointer;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            text-decoration: none;
+            text-align: center;
             display: block;
-        }
-
-        .leaderboard-box:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 4px 15px var(--accent-glow);
-        }
-
-        .leaderboard-box h4 {
-            color: var(--accent-color);
-            margin-top: 0;
-            margin-bottom: 8px;
-            font-size: 0.9rem;
-        }
-
-        .leaderboard-box ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            max-height: 80px;
-            overflow-y: auto;
-        }
-
-        .leaderboard-box li {
-            padding: 5px;
-            border-bottom: 1px solid var(--glass-border);
-            font-size: 0.8rem;
-            color: #00d4ff;
-        }
-
-        .leaderboard-box li:last-child {
-            border-bottom: none;
+            margin-top: 10px;
+            font-size: 0.9em;
         }
     </style>
 </head>
 
 <body>
-    <div class="login-container">
-        <div class="video-section">
-            <video autoplay muted loop playsinline controls id="bgVideo">
-                <source src="video/IMG_2776.MP4" type="video/mp4">
-            </video>
-            <span class="video-placeholder" id="videoPlaceholder">Add video to /video folder</span>
+
+    <div class="container" style="justify-content: center; align-items: flex-start;">
+        <div style="position: relative;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h2 style="margin: 0;">Stranded Skies</h2>
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <span id="usernameDisplay" style="color: var(--accent-color); font-weight: 600;"></span>
+                    <small id="connectionStatus" style="font-family: monospace;">Connecting Comms...</small>
+                    <button onclick="logout()" style="padding: 5px 10px; font-size: 0.8rem;">Logout</button>
+                </div>
+            </div>
+            <iframe id="unity" width="960" height="600" style="border:none;"></iframe>
+            <p style="text-align: center; color: var(--text-secondary); margin-top: 10px;">Hold <b>V</b> to talk</p>
         </div>
 
-        <div class="right-section">
-            <div class="game-title-box">
-                <h1>Stranded Skies</h1>
-            </div>
-
-            <div class="login-box">
-                <div id="loginView">
-                    <h3>Login</h3>
-                    <input id="loginUser" placeholder="Username">
-                    <input id="loginPass" type="password" placeholder="Password">
-
-                    <div class="button-row">
-                        <button onclick="login()">Login</button>
-                    </div>
-
-                    <p style="text-align: center; margin: 10px 0; font-size: 0.9rem;">
-                        <a href="#" onclick="showRegister(); return false;" style="color: var(--accent-color);">Create
-                            an Account</a>
-                    </p>
-
-                    <div class="divider"></div>
-                    <button class="guest-btn" onclick="guest()">Play as Guest</button>
-                </div>
-
-                <div id="registerView" style="display: none;">
-                    <h3>Create Account</h3>
-                    <input id="regUser" placeholder="Choose Username">
-                    <input id="regPass" type="password" placeholder="Password">
-                    <input id="regPassConfirm" type="password" placeholder="Confirm Password">
-
-                    <div class="button-row">
-                        <button onclick="register()">Register</button>
-                    </div>
-
-                    <p style="text-align: center; margin: 10px 0; font-size: 0.9rem;">
-                        <a href="#" onclick="showLogin(); return false;" style="color: var(--accent-color);">Back to
-                            Login</a>
-                    </p>
-                </div>
-            </div>
-
-            <div class="bottom-section">
-                <a href="leaderboard.html" class="leaderboard-box">
-                    <h4>Leaderboard</h4>
-                    <ul id="leaderboardList">
-                        <li>Loading...</li>
-                    </ul>
-                </a>
+        <div class="chat">
+            <h3 style="color: var(--accent-color); margin-top: 0;">Comms Channel</h3>
+            <div id="messages"></div>
+            <div style="display: flex; gap: 10px;">
+                <input id="msg" placeholder="Type message..." style="width: auto; flex-grow: 1; margin-bottom: 0;">
+                <button onclick="sendMessage()" style="margin: 0; padding: 10px 15px;">Send</button>
             </div>
         </div>
     </div>
 
-    <script src="js/auth.js"></script>
+    <!-- Login/Register Modal -->
+    <div id="authModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+
+            <!-- Login View -->
+            <div id="loginView" class="auth-view">
+                <h3>Save Your Score</h3>
+                <p style="text-align: center; font-size: 0.9em; margin-bottom: 15px;">Log in or Sign up to save your
+                    progress on the leaderboard!</p>
+                <input id="loginUser" placeholder="Username">
+                <input id="loginPass" type="password" placeholder="Password">
+                <button onclick="login()">Login</button>
+                <span class="link-text" onclick="showRegister()">New here? Create an Account</span>
+            </div>
+
+            <!-- Register View -->
+            <div id="registerView" class="auth-view" style="display: none;">
+                <h3>Create Account</h3>
+                <p style="text-align: center; font-size: 0.9em; margin-bottom: 15px;">Upgrade your guest account to save
+                    this score!</p>
+                <input id="regUser" placeholder="Choose Username">
+                <input id="regPass" type="password" placeholder="Password">
+                <input id="regPassConfirm" type="password" placeholder="Confirm Password">
+                <button onclick="register()">Register & Save Score</button>
+                <span class="link-text" onclick="showLogin()">Already have an account? Login</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs/lib/stomp.min.js"></script>
+    <script src="js/auth.js"></script> <!-- Included for login/register functions -->
+    <script src="js/game-launcher.js"></script>
+    <script src="js/chat.js"></script>
+    <script src="js/voice.js"></script>
+
     <script>
-        const video = document.getElementById('bgVideo');
-        const placeholder = document.getElementById('videoPlaceholder');
+        // --- Modal Logic ---
+        const modal = document.getElementById("authModal");
+        const loginView = document.getElementById("loginView");
+        const registerView = document.getElementById("registerView");
+        let pendingScoreBody = null;
 
-        video.onloadeddata = () => {
-            placeholder.style.display = 'none';
-        };
-        video.onerror = () => {
-            placeholder.style.display = 'block';
-        };
+        function showModal() {
+            modal.style.display = "flex";
+            showRegister(); // Default to register for guests upgrading
+        }
 
-        fetch("http://localhost:8080/api/leaderboard")
-            .then(res => res.json())
-            .then(data => {
-                const ul = document.getElementById("leaderboardList");
-                ul.innerHTML = "";
-                if (data.length === 0) {
-                    ul.innerHTML = "<li>No scores yet</li>";
-                } else {
-                    data.slice(0, 5).forEach((e, i) => {
-                        const li = document.createElement("li");
-                        li.textContent = `${i + 1}. ${e.username} - ${e.score}`;
-                        ul.appendChild(li);
-                    });
-                }
-            })
-            .catch(() => {
-                document.getElementById("leaderboardList").innerHTML = "<li>Offline</li>";
-            });
+        function closeModal() {
+            modal.style.display = "none";
+        }
 
         function showRegister() {
-            document.getElementById('loginView').style.display = 'none';
-            document.getElementById('registerView').style.display = 'block';
+            loginView.style.display = "none";
+            registerView.style.display = "block";
         }
 
         function showLogin() {
-            document.getElementById('registerView').style.display = 'none';
-            document.getElementById('loginView').style.display = 'block';
+            registerView.style.display = "none";
+            loginView.style.display = "block";
+        }
+
+        // --- Intercept Score Submission Message from Iframe ---
+        window.addEventListener('message', function (event) {
+            if (event.data && event.data.type === 'SCORE_SUBMISSION_ATTEMPT') {
+                console.log("Parent received score submission:", event.data.payload);
+
+                // Check if we are currently Guest
+                const currentUsername = localStorage.getItem("username");
+                if (currentUsername && currentUsername.startsWith("Guest_")) {
+                    pendingScoreBody = event.data.payload;
+                    showModal();
+                } else {
+                    console.log("User is already logged in, score should have been submitted normally via interceptor fallthrough? Or interceptor blocked it?");
+                    // Our interceptor logic in game/index.html lets the request FALL THROUGH.
+                    // But if it was a guest, the backend logic MIGHT have saved it as guest (which is hidden).
+                    // This modal is to UPGRADE. 
+                    // Wait, if I am a guest, the INTERCEPTOR sent this message.
+                    // The standard XHR request ALSO went through in the iframe.
+                    // So the score IS saved as guest. 
+                    // We just need to upgrade the account now.
+                }
+            }
+        });
+
+        // --- Override saveToken from auth.js ---
+        // We override this to Handle the pending score submission BEFORE redirecting/reloading
+        const originalSaveToken = saveToken;
+        saveToken = async function (token, username, isUpgrade) {
+            console.log("Overridden saveToken called:", username);
+            localStorage.setItem("token", token);
+            localStorage.setItem("username", username);
+
+            if (pendingScoreBody && !isUpgrade) {
+                console.log("Resubmitting pending score with new token...");
+                try {
+                    const res = await fetch(`${CONFIG.API_URL}/api/scores`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": "Bearer " + token
+                        },
+                        body: pendingScoreBody
+                    });
+
+                    if (res.ok) {
+                        alert("Score successfully linked to your new account!");
+                    } else {
+                        console.error("Failed to resubmit score", await res.text());
+                        alert("Account created, but failed to save previous score.");
+                    }
+                } catch (e) {
+                    console.error("Error resubmitting score:", e);
+                }
+            } else if (pendingScoreBody && isUpgrade) {
+                console.log("Skipping score resubmission (Account Upgrade detected - score preserved).");
+            }
+
+            // Reload to refresh token in Iframe/Game
+            window.location.reload();
+        };
+
+        // Display username
+        const usernameEl = document.getElementById('usernameDisplay');
+        if (usernameEl) {
+            usernameEl.textContent = localStorage.getItem('username') || '';
         }
     </script>
+
 </body>
 
 </html>
