@@ -5,4 +5,4 @@ if (!token) {
 }
 
 document.getElementById("unity").src =
-  `/game/index.html?token=${token}`;
+  `game/index.html?token=${token}`;
