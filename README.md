@@ -2,12 +2,12 @@
 
 ![Banner Placeholder](https://via.placeholder.com/1200x300?text=Stranded+Skies+Launcher)
 
-> A multiplayer WebGL game with a high-performance Spring Boot backend. Features secure authentication, real-time voice chat, and competitive leaderboards.
+> A multiplayer WebGL game with a high-performance Spring Boot backend. Features secure authentication, real-time voice chat, and competitive leaderboards. Now deployment-ready with Docker!
 
 ![Java](https://img.shields.io/badge/Java-25-orange?style=flat-square&logo=java)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.0.2-green?style=flat-square&logo=springboot)
-![Node.js](https://img.shields.io/badge/Node.js-Latest-green?style=flat-square&logo=nodedotjs)
-![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)
+![Docker](https://img.shields.io/badge/Docker-Ready-blue?style=flat-square&logo=docker)
+![Netlify](https://img.shields.io/badge/Netlify-Ready-00C7B7?style=flat-square&logo=netlify)
 
 ---
 
@@ -15,11 +15,10 @@
 - [✨ Features](#-features)
 - [🛠️ Tech Stack](#-tech-stack)
 - [🚀 Quick Start](#-quick-start)
+- [☁️ Deployment](#-deployment)
 - [🕹️ Controls](#-controls)
 - [🔧 API Endpoints](#-api-endpoints)
 - [📁 Project Structure](#-project-structure)
-- [📸 Screenshots](#-screenshots)
-- [🔗 Links](#-links)
 
 ---
 
@@ -32,7 +31,7 @@
 | 🏆 **Leaderboard** | Global top scores display with a premium glassmorphism UI. |
 | 🎙️ **Voice Chat** | Low-latency Push-to-Talk (Hold **V**) using WebRTC. |
 | 💬 **Real-time Chat** | Instant messaging system powered by WebSocket & Stomp. |
-| 💾 **Start Persistence** | Automatic score submission and user state management. |
+| 💾 **Persistence** | H2 Database with Docker Volume support. |
 
 ---
 
@@ -41,15 +40,15 @@
 ### Backend
 - **Framework:** Spring Boot 4.0.2
 - **Language:** Java 25
-- **Database:** H2 (In-Memory)
+- **Database:** H2 (File-based, Container-ready)
 - **Security:** Spring Security + JWT
-- **Real-time:** WebSocket + STOMP
+- **Containerization:** Docker + Docker Compose
 
 ### Frontend
-- **Runtime:** Node.js (Custom Server)
-- **Styling:** CSS3 (Glassmorphism Design)
-- **Logic:** Vanilla JavaScript (ES6+)
+- **Type:** Static Web App (HTML/CSS/JS)
+- **Hosting:** Netlify / Vercel / GitHub Pages
 - **Game Engine:** Unity WebGL
+- **Styling:** CSS3 (Glassmorphism Design)
 
 ---
 
@@ -57,28 +56,44 @@
 
 ### Prerequisites
 - **Java JDK 25**: Verify with `java -version`
-- **Node.js**: Verify with `node -v`
+- **Docker**: (Optional) For containerized run.
 
-### 1. Start the Backend
-Runs on Port `8080`.
+### Option 1: Run Locally (Manual)
+**1. Start Backend** (Port 8080)
 ```powershell
 cd Backend
-.\gradlew.bat clean build
 .\gradlew.bat bootRun
 ```
-> **Success:** Wait for `Started UnityBackendApplication in ... seconds`
 
-### 2. Start the Frontend
-Runs on Port `3000`.
+**2. Start Frontend**
+- Open `frontend/launcher.html` directly in your browser.
+- OR use a simple server: `npx serve frontend`
+
+### Option 2: Run with Docker 🐳
+**1. Start Backend**
 ```powershell
-cd frontend
-node server.js
+cd Backend
+docker-compose up --build
 ```
-> *Note: No `npm install` required - uses built-in Node modules.*
+**2. Start Frontend**
+- Open `frontend/launcher.html`.
 
-### 3. Launch
-Open your browser and navigate to:
-👉 **[http://localhost:3000](http://localhost:3000)**
+---
+
+## ☁️ Deployment
+
+### 1. Backend (Railway / Render / Fly.io)
+The backend includes a `Dockerfile` for easy deployment.
+- **Service**: Create a new web service connected to the `Backend` folder.
+- **Port**: `8080`
+- **Volume**: Mount a volume to `/app/data` to persist user accounts.
+- **Env Vars**:
+    - `JWT_SECRET`: (Generate a secure key)
+    - `DB_URL`: `jdbc:h2:file:./data/game;DB_CLOSE_DELAY=-1;AUTO_RECONNECT=TRUE`
+
+### 2. Frontend (Netlify)
+- **Config**: Update `frontend/js/config.js` with your deployed Backend URL.
+- **Deploy**: Drag the `frontend` folder to Netlify.
 
 ---
 
@@ -117,33 +132,24 @@ Open your browser and navigate to:
 ```bash
 Launcher/
 ├── Backend/                    # Spring Boot Application
+│   ├── Dockerfile             # 🐳 Deployment Config
+│   ├── docker-compose.yml     # Local Docker Setup
 │   ├── src/main/java/.../
 │   │   ├── controller/        # REST Controllers
 │   │   ├── security/          # JWT Config & Filters
-│   │   ├── service/           # Business Logic
-│   │   └── handler/           # WebSocket Handlers
+│   │   └── service/           # Logic
 │   └── data/                  # H2 Database Files
 │
-└── frontend/                   # Web Client Server
-    ├── index.html             # Landing / Login Page
-    ├── game.html              # Main Game Wrapper
+└── frontend/                   # Static Web Client
+    ├── launcher.html          # Login / Landing Page
+    ├── index.html             # Game Page (Auth Guarded)
+    ├── leaderboard.html       # Leaderboard UI
     ├── js/                    # Client-side Logic
-    │   ├── auth.js            # Auth State Management
-    │   ├── voice.js           # WebRTC Implementation
-    │   └── chat.js            # WebSocket Chat
-    ├── css/                   # Styling
+    │   ├── config.js          # API Configuration
+    │   ├── auth.js            # Auth & Redirects
+    │   └── game-launcher.js   # Unity Loader
     └── game/                  # Unity WebGL Exports
 ```
-
----
-
-## 📸 Screenshots
-
-*(Add your screenshots here)*
-
-| Login Screen | In-Game |
-|:---:|:---:|
-| ![Login](https://via.placeholder.com/400x225?text=Login+Screen) | ![Game](https://via.placeholder.com/400x225?text=Gameplay) |
 
 ---
 
@@ -151,20 +157,8 @@ Launcher/
 
 | Issue | Solution |
 |-------|----------|
-| **Port 8080 Busy** | Run `Stop-Process -Name java -Force` in PowerShell. |
-| **Game Not Loading** | Ensure Frontend server is running (`node server.js`). |
-| **CORS Errors** | Verify Backend is on `8080` and Client on `3000`. |
-| **Database Locks** | Delete the `Backend/data/` folder and restart the Backend. |
-
-### H2 Console Access
-- **URL:** [http://localhost:8080/h2-console](http://localhost:8080/h2-console)
-- **JDBC URL:** `jdbc:h2:file:D:/Launcher/Backend/data/game`
-- **User:** `sa`
-- **Password:** `password`
-
----
-
-## 🔗 Links
-- [Unity Project](https://github.com/Junaed93/Stranded-Skies)
+| **File Not Found** | Ensure `frontend/js/game-launcher.js` uses relative paths (`game/index.html`). |
+| **CORS Errors** | Check `js/config.js` and ensure Backend is running. |
+| **Data Lost on Restart** | Ensure Docker Volume is mounted to `/app/data`. |
 
 ---
