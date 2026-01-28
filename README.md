@@ -7,7 +7,7 @@
 ![Java](https://img.shields.io/badge/Java-25-orange?style=flat-square&logo=java)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.0.2-green?style=flat-square&logo=springboot)
 ![Docker](https://img.shields.io/badge/Docker-Ready-blue?style=flat-square&logo=docker)
-![Netlify](https://img.shields.io/badge/Netlify-Ready-00C7B7?style=flat-square&logo=netlify)
+
 
 ---
 
@@ -46,7 +46,7 @@
 
 ### Frontend
 - **Type:** Static Web App (HTML/CSS/JS)
-- **Hosting:** Netlify / Vercel / GitHub Pages
+- **Hosting:** Any Static Host (Vercel / GitHub Pages / etc.)
 - **Game Engine:** Unity WebGL
 - **Styling:** CSS3 (Glassmorphism Design)
 
@@ -91,9 +91,9 @@ The backend includes a `Dockerfile` for easy deployment.
     - `JWT_SECRET`: (Generate a secure key)
     - `DB_URL`: `jdbc:h2:file:./data/game;DB_CLOSE_DELAY=-1;AUTO_RECONNECT=TRUE`
 
-### 2. Frontend (Netlify)
+### 2. Frontend (Static Host)
 - **Config**: Update `frontend/js/config.js` with your deployed Backend URL.
-- **Deploy**: Drag the `frontend` folder to Netlify.
+- **Deploy**: Upload the `frontend` folder to any static hosting provider.
 
 ---
 
