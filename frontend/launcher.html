@@ -235,6 +235,19 @@
     </div>
 
     <script src="js/config.js"></script>
+    <script>
+        // Clear stale guest sessions so pasting the same link creates a fresh guest
+        (function () {
+            const storedUsername = sessionStorage.getItem('username') || localStorage.getItem('username');
+            if (storedUsername && storedUsername.startsWith('Guest_')) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('username');
+                sessionStorage.removeItem('token');
+                sessionStorage.removeItem('username');
+                console.log('[Launcher] Cleared stale guest session:', storedUsername);
+            }
+        })();
+    </script>
     <script src="js/auth.js"></script>
     <script>
         const video = document.getElementById('bgVideo');
@@ -247,24 +260,30 @@
             placeholder.style.display = 'block';
         };
 
-        fetch(`${CONFIG.API_URL}/api/leaderboard`)
-            .then(res => res.json())
-            .then(data => {
-                const ul = document.getElementById("leaderboardList");
-                ul.innerHTML = "";
-                if (data.length === 0) {
-                    ul.innerHTML = "<li>No scores yet</li>";
-                } else {
-                    data.slice(0, 5).forEach((e, i) => {
-                        const li = document.createElement("li");
-                        li.textContent = `${i + 1}. ${e.username} - ${e.score}`;
-                        ul.appendChild(li);
-                    });
-                }
-            })
-            .catch(() => {
-                document.getElementById("leaderboardList").innerHTML = "<li>Offline</li>";
-            });
+        function loadMiniLeaderboard() {
+            fetch(`${CONFIG.API_URL}/api/leaderboard`)
+                .then(res => res.json())
+                .then(data => {
+                    const ul = document.getElementById("leaderboardList");
+                    ul.innerHTML = "";
+                    if (data.length === 0) {
+                        ul.innerHTML = "<li>No scores yet</li>";
+                    } else {
+                        data.slice(0, 5).forEach((e, i) => {
+                            const li = document.createElement("li");
+                            li.textContent = `${i + 1}. ${e.username} - ${e.score}`;
+                            ul.appendChild(li);
+                        });
+                    }
+                })
+                .catch(() => {
+                    document.getElementById("leaderboardList").innerHTML = "<li>Offline</li>";
+                });
+        }
+
+        // Load immediately and auto-refresh every 10 seconds
+        loadMiniLeaderboard();
+        setInterval(loadMiniLeaderboard, 10000);
 
         function showRegister() {
             document.getElementById('loginView').style.display = 'none';

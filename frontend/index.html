@@ -177,7 +177,7 @@
                 console.log("Parent received score submission:", event.data.payload);
 
                 // Check if we are currently Guest
-                const currentUsername = localStorage.getItem("username");
+                const currentUsername = sessionStorage.getItem("username") || localStorage.getItem("username");
                 if (currentUsername && currentUsername.startsWith("Guest_")) {
                     pendingScoreBody = event.data.payload;
                     showModal();
@@ -199,8 +199,17 @@
         const originalSaveToken = saveToken;
         saveToken = async function (token, username, isUpgrade) {
             console.log("Overridden saveToken called:", username);
-            localStorage.setItem("token", token);
-            localStorage.setItem("username", username);
+            if (username && username.startsWith("Guest_")) {
+                sessionStorage.setItem("token", token);
+                sessionStorage.setItem("username", username);
+                localStorage.removeItem("token");
+                localStorage.removeItem("username");
+            } else {
+                localStorage.setItem("token", token);
+                localStorage.setItem("username", username);
+                sessionStorage.removeItem("token");
+                sessionStorage.removeItem("username");
+            }
 
             if (pendingScoreBody && !isUpgrade) {
                 console.log("Resubmitting pending score with new token...");
@@ -234,7 +243,7 @@
         // Display username
         const usernameEl = document.getElementById('usernameDisplay');
         if (usernameEl) {
-            usernameEl.textContent = localStorage.getItem('username') || '';
+            usernameEl.textContent = sessionStorage.getItem('username') || localStorage.getItem('username') || '';
         }
     </script>
 

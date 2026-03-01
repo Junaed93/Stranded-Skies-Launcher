@@ -130,57 +130,27 @@
 
     document.body.appendChild(script);
 
-    // --- Custom Interceptor for Guest Score Submission ---
-    (function () {
-      // 1. Intercept XMLHttpRequest
-      const originalOpen = XMLHttpRequest.prototype.open;
-      XMLHttpRequest.prototype.open = function (method, url) {
-        this._url = url;
-        this._method = method;
-        return originalOpen.apply(this, arguments);
-      };
+  </script>
+  <script>
+    // INTERCEPT FETCH FOR SCORE SUBMISSION
+    const originalFetch = window.fetch;
+    window.fetch = async function (...args) {
+      let [resource, config] = args;
 
-      const originalSend = XMLHttpRequest.prototype.send;
-      XMLHttpRequest.prototype.send = function (body) {
-        if (this._method === 'POST' && this._url.includes('/api/scores')) {
-          handleScoreSubmission(body);
-        }
-        return originalSend.apply(this, arguments);
-      };
+      // Check if this is a score submission
+      if (resource && typeof resource === 'string' && resource.includes('/api/scores') && config && config.method === 'POST') {
+        console.log("Interceptor caught score submission to:", resource);
 
-      // 2. Intercept fetch
-      const originalFetch = window.fetch;
-      window.fetch = async function (input, init) {
-        let url = input;
-        let method = (init && init.method) || 'GET';
-        let body = (init && init.body);
-
-        if (input instanceof Request) {
-          url = input.url;
-          method = input.method;
-          body = input.body;
-        }
-
-        if (url && url.toString().includes('/api/scores') && (method.toUpperCase() === 'POST')) {
-          if (typeof body === 'string') {
-            handleScoreSubmission(body);
-          } else {
-            console.log("Intercepted score submission but body is not a string:", body);
-            handleScoreSubmission(body);
-          }
-        }
-        return originalFetch.apply(this, arguments);
-      };
-
-      function handleScoreSubmission(body) {
-        console.log("Intercepted Score Submission:", body);
+        // Dispatch message to parent window to trigger modal if guest
         window.parent.postMessage({
           type: 'SCORE_SUBMISSION_ATTEMPT',
-          payload: body
+          payload: config.body
         }, '*');
       }
-    })();
 
+      // Always let the request pass through to the backend (to save the guest score)
+      return originalFetch.apply(this, args);
+    };
   </script>
 </body>
 

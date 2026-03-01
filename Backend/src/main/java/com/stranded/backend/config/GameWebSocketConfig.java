@@ -1,7 +1,8 @@
 package com.stranded.backend.config;
 
+import com.stranded.backend.handler.ChatHandler;
 import com.stranded.backend.handler.GameWebSocketHandler;
-import org.springframework.context.annotation.Bean;
+import com.stranded.backend.handler.VoiceHandler;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
@@ -11,14 +12,30 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 @EnableWebSocket
 public class GameWebSocketConfig implements WebSocketConfigurer {
 
-    @Override
-    public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(gameWebSocketHandler(), "/game")
-                .setAllowedOrigins("*");
+    private final GameWebSocketHandler gameWebSocketHandler;
+    private final ChatHandler chatHandler;
+    private final VoiceHandler voiceHandler;
+
+    public GameWebSocketConfig(GameWebSocketHandler gameWebSocketHandler,
+                               ChatHandler chatHandler,
+                               VoiceHandler voiceHandler) {
+        this.gameWebSocketHandler = gameWebSocketHandler;
+        this.chatHandler = chatHandler;
+        this.voiceHandler = voiceHandler;
     }
 
-    @Bean
-    public GameWebSocketHandler gameWebSocketHandler() {
-        return new GameWebSocketHandler();
+    @Override
+    public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
+        // Game multiplayer endpoint — raw WebSocket (no SockJS) for Unity WebGL
+        registry.addHandler(gameWebSocketHandler, "/game")
+                .setAllowedOriginPatterns("*");
+
+        // Chat WebSocket endpoint
+        registry.addHandler(chatHandler, "/ws/chat")
+                .setAllowedOriginPatterns("*");
+
+        // Voice WebSocket endpoint
+        registry.addHandler(voiceHandler, "/ws/voice")
+                .setAllowedOriginPatterns("*");
     }
 }

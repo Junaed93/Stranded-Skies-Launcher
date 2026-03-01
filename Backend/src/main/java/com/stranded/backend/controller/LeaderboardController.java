@@ -23,7 +23,7 @@ public class LeaderboardController {
 
     @GetMapping
     public ResponseEntity<List<LeaderboardEntry>> getLeaderboard() {
-        List<Score> topScores = scoreRepository.findTopScores(PageRequest.of(0, 50));
+        List<Score> topScores = scoreRepository.findHighestScorePerUserPerMode(PageRequest.of(0, 50));
 
         List<LeaderboardEntry> leaderboard = topScores.stream()
                 .filter(score -> !score.getUser().isGuest())

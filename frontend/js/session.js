@@ -1,74 +1,81 @@
 const SESSION_API = `${CONFIG.API_URL}/auth/validate`;
 
-(function() {
-    const token = localStorage.getItem("token");
-    const username = localStorage.getItem("username");
+(function () {
+  const token =
+    sessionStorage.getItem("token") || localStorage.getItem("token");
+  const username =
+    sessionStorage.getItem("username") || localStorage.getItem("username");
 
-    if (!token) {
-        console.log("[Session] No token found, redirecting to login...");
-        redirectToLogin();
-        return;
-    }
+  if (!token) {
+    console.log("[Session] No token found, redirecting to login...");
+    redirectToLogin();
+    return;
+  }
 
-    validateSession(token);
+  validateSession(token);
 })();
 
 async function validateSession(token) {
-    try {
-        const response = await fetch(SESSION_API, {
-            method: "GET",
-            headers: {
-                "Authorization": "Bearer " + token
-            }
-        });
+  try {
+    const response = await fetch(SESSION_API, {
+      method: "GET",
+      headers: {
+        Authorization: "Bearer " + token,
+      },
+    });
 
-        if (response.ok) {
-            const data = await response.json();
-            if (data.valid) {
-                console.log("[Session] Valid session for:", data.username);
-                // Update username in case it changed (e.g., after upgrade)
-                localStorage.setItem("username", data.username);
-                showPage();
-                return;
-            }
+    if (response.ok) {
+      const data = await response.json();
+      if (data.valid) {
+        console.log("[Session] Valid session for:", data.username);
+        // Update username in case it changed (e.g., after upgrade)
+        if (data.username && data.username.startsWith("Guest_")) {
+          sessionStorage.setItem("username", data.username);
+        } else {
+          localStorage.setItem("username", data.username);
         }
-
-        // Token invalid or expired
-        console.log("[Session] Invalid token, clearing and redirecting...");
-        clearSession();
-        redirectToLogin();
-
-    } catch (error) {
-        console.error("[Session] Validation error:", error);
-        // If backend is down, allow access if token exists (offline mode)
-        // Or be strict and redirect - choosing strict for security
-        console.log("[Session] Backend unreachable, redirecting to login...");
-        redirectToLogin();
+        showPage();
+        return;
+      }
     }
+
+    // Token invalid or expired
+    console.log("[Session] Invalid token, clearing and redirecting...");
+    clearSession();
+    redirectToLogin();
+  } catch (error) {
+    console.error("[Session] Validation error:", error);
+    // If backend is down, allow access if token exists (offline mode)
+    // Or be strict and redirect - choosing strict for security
+    console.log("[Session] Backend unreachable, redirecting to login...");
+    redirectToLogin();
+  }
 }
 
 function clearSession() {
-    localStorage.removeItem("token");
-    localStorage.removeItem("username");
+  localStorage.removeItem("token");
+  localStorage.removeItem("username");
+  sessionStorage.removeItem("token");
+  sessionStorage.removeItem("username");
 }
 
 function redirectToLogin() {
-    window.location.href = "launcher.html";
+  window.location.href = "launcher.html";
 }
 
 function showPage() {
-    // Remove the loading overlay if exists
-    const overlay = document.getElementById("sessionLoadingOverlay");
-    if (overlay) {
-        overlay.remove();
-    }
-    // Make body visible (if hidden initially)
-    document.body.style.visibility = "visible";
-    document.body.style.opacity = "1";
+  // Remove the loading overlay if exists
+  const overlay = document.getElementById("sessionLoadingOverlay");
+  if (overlay) {
+    overlay.remove();
+  }
+  // Make body visible (if hidden initially)
+  document.body.style.visibility = "visible";
+  document.body.style.opacity = "1";
 }
 
 // Logout function (call from UI)
 function logout() {
-    clearSession();
-    redirectToLogin();
+  clearSession();
+  redirectToLogin();
 }

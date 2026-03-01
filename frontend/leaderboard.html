@@ -236,63 +236,69 @@
             }
         }
 
-        // Fetch Leaderboard
-        fetch(`${CONFIG.API_URL}/api/leaderboard`)
-            .then(res => {
-                if (!res.ok) throw new Error("API Offline");
-                return res.json();
-            })
-            .then(data => {
-                const container = document.getElementById('leaderboardBody');
-
-                if (data.length === 0) {
-                    container.innerHTML = `
-                        <div class="empty-state">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 12H4" />
-                            </svg>
-                            <p>No scores yet. Be the first!</p>
-                        </div>
-                    `;
-                    return;
-                }
-
-                container.innerHTML = data.map((entry, index) => {
-                    let rankClass = '';
-                    let rankDisplay = index + 1;
-
-                    if (index === 0) { rankClass = 'gold'; rankDisplay = '🥇'; }
-                    else if (index === 1) { rankClass = 'silver'; rankDisplay = '🥈'; }
-                    else if (index === 2) { rankClass = 'bronze'; rankDisplay = '🥉'; }
-
-                    return `
-                        <div class="lb-row">
-                            <span class="rank ${rankClass}">${rankDisplay}</span>
-                            <span class="player-name">${escapeHtml(entry.username)}</span>
-                            <span class="score">${entry.score.toLocaleString()}</span>
-                            <span class="game-mode">${entry.gameMode || 'Normal'}</span>
-                        </div>
-                    `;
-                }).join('');
-            })
-            .catch(err => {
-                console.error(err);
-                document.getElementById('leaderboardBody').innerHTML = `
-                    <div class="empty-state">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                        </svg>
-                        <p>Server offline. Try again later.</p>
-                    </div>
-                `;
-            });
-
         function escapeHtml(text) {
             if (!text) return "Unknown";
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
         }
+
+        // Fetch and render leaderboard
+        function loadLeaderboard() {
+            fetch(`${CONFIG.API_URL}/api/leaderboard`)
+                .then(res => {
+                    if (!res.ok) throw new Error("API Offline");
+                    return res.json();
+                })
+                .then(data => {
+                    const container = document.getElementById('leaderboardBody');
+
+                    if (!data || data.length === 0) {
+                        container.innerHTML = `
+                            <div class="empty-state">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 12H4" />
+                                </svg>
+                                <p>No scores yet. Be the first!</p>
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    container.innerHTML = data.map((entry, index) => {
+                        let rankClass = '';
+                        let rankDisplay = index + 1;
+
+                        if (index === 0) { rankClass = 'gold'; rankDisplay = '🥇'; }
+                        else if (index === 1) { rankClass = 'silver'; rankDisplay = '🥈'; }
+                        else if (index === 2) { rankClass = 'bronze'; rankDisplay = '🥉'; }
+
+                        return `
+                            <div class="lb-row">
+                                <span class="rank ${rankClass}">${rankDisplay}</span>
+                                <span class="player-name">${escapeHtml(entry.username)}</span>
+                                <span class="score">${(entry.score || 0).toLocaleString()}</span>
+                                <span class="game-mode">${entry.gameMode || 'Normal'}</span>
+                            </div>
+                        `;
+                    }).join('');
+                })
+                .catch(err => {
+                    console.error('[Leaderboard]', err);
+                    document.getElementById('leaderboardBody').innerHTML = `
+                        <div class="empty-state">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                            <p>Server offline. Try again later.</p>
+                        </div>
+                    `;
+                });
+        }
+
+        // Load immediately and auto-refresh every 10 seconds
+        loadLeaderboard();
+        setInterval(loadLeaderboard, 10000);
     </script>
 
 </body>
