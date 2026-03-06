@@ -12,8 +12,7 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.IOException;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
@@ -26,6 +25,10 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
     private final Map<String, String> sessionPlayerIds = new ConcurrentHashMap<>();
     // Maps session ID -> WebSocketSession
     private final Map<String, WebSocketSession> sessions = new ConcurrentHashMap<>();
+    // Maps session ID -> roomId
+    private final Map<String, String> sessionRoomIds = new ConcurrentHashMap<>();
+    // Maps roomId -> Set of session IDs in that room
+    private final Map<String, Set<String>> rooms = new ConcurrentHashMap<>();
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
@@ -46,7 +49,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
 
             switch (type) {
                 case "JOIN":
-                    handleJoin(session);
+                    handleJoin(session, json);
                     break;
                 case "MOVE":
                     handleMove(session, json);
@@ -60,16 +63,26 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
         }
     }
 
-    private void handleJoin(WebSocketSession session) {
+    private void handleJoin(WebSocketSession session, JsonNode json) {
         String playerId = sessionPlayerIds.get(session.getId());
-        log.info("[GameWS] Player {} joined the game", playerId);
+        String roomId = json.has("roomId") ? json.get("roomId").asText() : "default";
 
-        // Send existing players' info to the newly joined player
-        // (They will appear when MOVE messages start arriving)
+        // Register session under the room
+        sessionRoomIds.put(session.getId(), roomId);
+        rooms.computeIfAbsent(roomId, k -> ConcurrentHashMap.newKeySet()).add(session.getId());
+
+        log.info("[GameWS] Player {} joined room {}", playerId, roomId);
+
+        // Notify other players in the same room that a new player joined
+        ObjectNode joinMsg = objectMapper.createObjectNode();
+        joinMsg.put("type", "PLAYER_JOINED");
+        joinMsg.put("id", playerId);
+        broadcastToRoom(roomId, joinMsg, session.getId());
     }
 
     private void handleMove(WebSocketSession senderSession, JsonNode json) {
         String senderId = sessionPlayerIds.get(senderSession.getId());
+        String roomId = sessionRoomIds.getOrDefault(senderSession.getId(), "default");
 
         // Create outgoing message with sender's ID attached
         ObjectNode outgoing = objectMapper.createObjectNode();
@@ -80,26 +93,35 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
         outgoing.put("velX", json.has("velX") ? json.get("velX").asDouble() : 0.0);
         outgoing.put("grounded", json.has("grounded") && json.get("grounded").asBoolean());
 
-        String outgoingJson;
+        // Broadcast to all OTHER connected clients in the SAME ROOM
+        broadcastToRoom(roomId, outgoing, senderSession.getId());
+    }
+
+    private void broadcastToRoom(String roomId, ObjectNode message, String excludeSessionId) {
+        Set<String> roomSessions = rooms.get(roomId);
+        if (roomSessions == null)
+            return;
+
+        String jsonStr;
         try {
-            outgoingJson = objectMapper.writeValueAsString(outgoing);
+            jsonStr = objectMapper.writeValueAsString(message);
         } catch (Exception e) {
-            log.error("[GameWS] Failed to serialize MOVE message", e);
+            log.error("[GameWS] Failed to serialize message", e);
             return;
         }
 
-        // Broadcast to all OTHER connected clients
-        TextMessage broadcastMessage = new TextMessage(outgoingJson);
-        for (Map.Entry<String, WebSocketSession> entry : sessions.entrySet()) {
-            WebSocketSession targetSession = entry.getValue();
-            if (targetSession.isOpen() && !targetSession.getId().equals(senderSession.getId())) {
+        TextMessage broadcastMessage = new TextMessage(jsonStr);
+        for (String sessionId : roomSessions) {
+            if (excludeSessionId != null && sessionId.equals(excludeSessionId))
+                continue;
+            WebSocketSession targetSession = sessions.get(sessionId);
+            if (targetSession != null && targetSession.isOpen()) {
                 try {
                     synchronized (targetSession) {
                         targetSession.sendMessage(broadcastMessage);
                     }
                 } catch (IOException e) {
-                    log.error("[GameWS] Failed to send MOVE to session {}: {}",
-                            entry.getKey(), e.getMessage());
+                    log.error("[GameWS] Failed to send to session {}: {}", sessionId, e.getMessage());
                 }
             }
         }
@@ -109,29 +131,43 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
         String playerId = sessionPlayerIds.remove(session.getId());
         sessions.remove(session.getId());
+        String roomId = sessionRoomIds.remove(session.getId());
 
-        if (playerId != null) {
-            log.info("[GameWS] Player disconnected: {} (status: {})", playerId, status);
+        if (playerId != null && roomId != null) {
+            log.info("[GameWS] Player {} disconnected from room {} (status: {})", playerId, roomId, status);
 
-            // Broadcast LEAVE to all remaining clients
+            Set<String> roomSessions = rooms.get(roomId);
+            if (roomSessions != null) {
+                roomSessions.remove(session.getId());
+                if (roomSessions.isEmpty()) {
+                    rooms.remove(roomId);
+                    log.info("[GameWS] Room {} is now empty, removed", roomId);
+                }
+            }
+
+            // Broadcast LEAVE to all remaining clients in the room
             ObjectNode leaveMessage = objectMapper.createObjectNode();
             leaveMessage.put("type", "LEAVE");
             leaveMessage.put("id", playerId);
-
-            String leaveJson = objectMapper.writeValueAsString(leaveMessage);
-            TextMessage broadcastMessage = new TextMessage(leaveJson);
-
-            for (WebSocketSession s : sessions.values()) {
-                if (s.isOpen()) {
-                    try {
-                        synchronized (s) {
-                            s.sendMessage(broadcastMessage);
-                        }
-                    } catch (IOException e) {
-                        log.error("[GameWS] Failed to send LEAVE to session: {}", e.getMessage());
-                    }
-                }
-            }
+            broadcastToRoom(roomId, leaveMessage, null);
         }
+    }
+
+    // --- Methods used by GameRoomController ---
+
+    public Set<String> getActiveRoomIds() {
+        return rooms.keySet();
+    }
+
+    public int getRoomPlayerCount(String roomId) {
+        Set<String> roomSessions = rooms.get(roomId);
+        return roomSessions != null ? roomSessions.size() : 0;
+    }
+
+    public String createRoom() {
+        String roomId = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
+        rooms.computeIfAbsent(roomId, k -> ConcurrentHashMap.newKeySet());
+        log.info("[GameWS] Room created: {}", roomId);
+        return roomId;
     }
 }

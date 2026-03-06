@@ -15,6 +15,8 @@ public class ChatMessage {
 
     private String content;
 
+    private String roomId;
+
     private LocalDateTime timestamp;
 
     @PrePersist
@@ -25,9 +27,10 @@ public class ChatMessage {
     public ChatMessage() {
     }
 
-    public ChatMessage(String sender, String content) {
+    public ChatMessage(String sender, String content, String roomId) {
         this.sender = sender;
         this.content = content;
+        this.roomId = roomId;
         this.timestamp = LocalDateTime.now();
     }
 
@@ -53,6 +56,14 @@ public class ChatMessage {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public String getRoomId() {
+        return roomId;
+    }
+
+    public void setRoomId(String roomId) {
+        this.roomId = roomId;
     }
 
     public LocalDateTime getTimestamp() {
